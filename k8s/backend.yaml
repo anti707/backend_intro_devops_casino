@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: casino-backend
+  labels:
+    app: casino-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: casino-backend
+  template:
+    metadata:
+      labels:
+        app: casino-backend
+    spec:
+      containers:
+        - name: backend
+          image: 403943113547.dkr.ecr.us-east-1.amazonaws.com/casino-backend:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: casino-secrets
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 3000
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 3000
+            initialDelaySeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: casino-backend-service
+spec:
+  type: ClusterIP 
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: casino-backend
